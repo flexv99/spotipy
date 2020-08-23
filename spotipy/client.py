@@ -600,6 +600,31 @@ class Spotify(object):
             additional_types=",".join(additional_types),
         )
 
+    def user_playlist_tracks_full(self, user, playlist_id=None, fields=None, market=None):
+        """ Get full details of the tracks of a playlist owned by a user.
+            Parameters:
+                - user - the id of the user
+                - playlist_id - the id of the playlist
+                - fields - which fields to return
+                - market - an ISO 3166-1 alpha-2 country code.
+        """
+
+        # first run through also retrieves total no of songs in library
+        response = self.user_playlist_tracks(user, playlist_id, fields=fields,
+                                             limit=100, market=market)
+        results = response["items"]
+
+        # subsequently runs until it hits the user-defined limit or has read all
+        # songs in the library
+
+        while len(results) < response["total"]:
+            response = self.user_playlist_tracks(
+                user, playlist_id, fields=fields, limit=100, offset=len(results), market=market
+            )
+            results.extend(response["items"])
+
+        return results
+
     def playlist_tracks(
         self,
         playlist_id,
